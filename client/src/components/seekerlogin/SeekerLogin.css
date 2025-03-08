@@ -1,0 +1,103 @@
+/* styles.css */
+ .wrapper-1{
+    margin: 0;
+    font-family: Arial, sans-serif;
+    color: black;
+    background-color: rgb(240, 234, 246);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+}
+
+.welcome-section .welcome{
+    color: purple;
+    margin-top: 80px;
+    font-weight: 500;
+    font-size: 80px;
+    line-height: 1;
+}
+.login-container {
+    display: flex;
+    max-width: 900px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.welcome-section {
+    padding: 40px;
+    flex: 1;
+    
+}
+
+
+
+.welcome-section p {
+    line-height: 1.5;
+}
+
+.social-icons {
+    margin-right: 10px;
+    color: black;
+    font-size: 1.5em;
+    text-decoration: none;
+}
+.signin button{
+    background-color: rgb(162, 71, 247);
+    border: none;
+}
+.signin button:hover{
+    background-color: rgb(147, 44, 243);
+}
+.form-section {
+    flex: 1;
+    padding: 40px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.form-section h2 {
+    margin-bottom: 20px;
+    font-size: 1.8em;
+    color: black;
+    text-align: center;
+}
+.form-section .person{
+    font-size: 80px;
+    
+}
+@media (max-width: 768px) {
+    .login-container {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .welcome-section {
+        display: none;
+    }
+
+    .form-section {
+        width: 90%; /* Adjust the width as needed */
+        margin: 0 auto; /* Center the form */
+        padding: 20px; /* Add padding for better spacing */
+        margin-top: 80px;
+    }
+
+    .form-section h2 {
+        font-size: 2em; /* Adjust font size for smaller screens */
+    }
+
+    .signin button {
+        width: 50%; /* Make button full width */
+    }
+}
+
+
+
+
+
+
+
+
+
+
