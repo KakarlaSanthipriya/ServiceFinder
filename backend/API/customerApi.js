@@ -130,35 +130,37 @@ customerApp.put("/customers-prof/:_id", tokenVerify, expressAsyncHandler(async (
 }));
 
 
-// Update seeker's booking details by username (protected)
 customerApp.put("/customers/:username/booking-update", tokenVerify, expressAsyncHandler(async (req, res) => {
+  console.log("Booking update endpoint hit"); // Debugging
   const customerCollection = req.app.get('customerCollection');
   const { bookingDetails } = req.body; // Get the updated booking details from the request body
   const username = req.params.username; // Get the username from the URL
 
   // Validate the input
   if (!Array.isArray(bookingDetails)) {
+    console.log("Invalid booking details format");
     return res.status(400).send({ message: "Invalid booking details format" });
   }
 
-  // Update the seeker's booking details in the database
-  const result = await customerCollection.updateOne(
-    { username }, // Find the seeker by username
-    { $set: { bookingDetails } } // Update the bookingDetails field
-  );
-
-  // Check if the update was successful
-  if (result.matchedCount === 0) {
+  // Find the seeker by username
+  const seeker = await customerCollection.findOne({ username });
+  if (!seeker) {
+    console.log("Seeker not found");
     return res.status(404).send({ message: "Seeker not found" });
   }
 
-  if (result.modifiedCount === 1) {
-    res.send({ message: "Seeker booking details updated successfully", payload: bookingDetails });
-  } else {
-    res.send({ message: "No changes made to booking details" });
-  }
-}));
+  // Update the seeker's booking details
+  seeker.bookingDetails = bookingDetails;
 
+  // Save the updated seeker document
+  await customerCollection.updateOne(
+    { username },
+    { $set: { bookingDetails: seeker.bookingDetails } }
+  );
+
+  console.log("Seeker updated status:", seeker.bookingDetails); // Debugging
+  res.send({ message: "Seeker booking details updated successfully", payload: seeker.bookingDetails });
+}));
 
 module.exports = customerApp;
 

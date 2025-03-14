@@ -21,6 +21,7 @@ function ProviderDashboard() {
       setPhoneNumber(currentProvider.phoneNumber);
       setServiceType(currentProvider.serviceType);
       setBusinessAddress(currentProvider.businessAddress);
+      setCity(currentProvider.city)
       setOpeningTime(currentProvider.openingTime);
       setClosingTime(currentProvider.closingTime);
       setBookingDetails(currentProvider.bookingDetails || []);
@@ -45,9 +46,12 @@ function ProviderDashboard() {
         closingTime,
       };
 
-      const res = await fetch(`http://localhost:3000/provider/${currentProvider.id}`, {
+      const res = await fetch(`http://localhost:4000/serviceprovider-api/serviceproviders/${currentProvider._id}/profile-update`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+         },
         body: JSON.stringify(updatedProvider),
       });
 
@@ -62,47 +66,66 @@ function ProviderDashboard() {
 
   const handleConfirmSlot = async (booking) => {
     try {
-      // Update the provider's booking status to "Confirmed"
+      // Update provider's booking details
       const updatedProviderBookings = currentProvider.bookingDetails.map((b) =>
-        b.seekerName === booking.seekerName &&
-        b.date === booking.date &&
-        b.time === booking.time
+        b.bookingId === booking.bookingId // Use bookingId to identify the booking
           ? { ...b, status: 'Confirmed' }
           : b
       );
   
-      // Update the provider's data
       const updatedProvider = { ...currentProvider, bookingDetails: updatedProviderBookings };
-      await fetch(`http://localhost:3000/provider/${currentProvider.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedProvider),
-      });
   
-      // Update the seeker's booking status to "Confirmed"
-      const seekerRes = await fetch(`http://localhost:3000/seeker?username=${booking.seekerName}`);
+      // Update provider's booking details in the backend
+      await fetch(
+        `http://localhost:4000/serviceprovider-api/serviceproviders/${currentProvider.username}/booking-update`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          },
+          body: JSON.stringify(updatedProvider),
+        }
+      );
+  console.log("seeker name", booking.seekerName)
+      // Fetch seeker data
+      const seekerRes = await fetch(
+        `http://localhost:4000/customer-api/customers/${booking.seekerName}`,
+        {
+          headers: {
+            Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          },
+        }
+        
+      );
       if (!seekerRes.ok) throw new Error('Failed to fetch seeker data');
-  
-      const seekers = await seekerRes.json();
-      if (seekers.length > 0) {
-        const seeker = seekers[0]; // Assuming there's only one seeker with that name
+  console.log("seekerRes", seekerRes)
+      const seekersData = await seekerRes.json();
+      const seeker = seekersData.payload; // Assuming the API returns a single seeker object
+      console.log("seeker confirm", seeker)
+      if (seeker && seeker.bookingDetails) {
+        // Update seeker's booking details
         const updatedSeekerBookings = seeker.bookingDetails.map((b) =>
-          b.seekerName === booking.seekerName &&
-          b.providerName === booking.providerName &&
-          b.date === booking.date &&
-          b.time === booking.time
+          b.bookingId === booking.bookingId // Use bookingId to identify the booking
             ? { ...b, status: 'Confirmed' }
             : b
         );
   
-        // Update the seeker's data
-        await fetch(`http://localhost:3000/seeker/${seeker.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...seeker, bookingDetails: updatedSeekerBookings }),
-        });
+        // Update seeker's booking details in the backend
+        await fetch(
+          `http://localhost:4000/customer-api/customers/${seeker.username}/booking-update`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+            },
+            body: JSON.stringify({ ...seeker, bookingDetails: updatedSeekerBookings }),
+          }
+        );
       }
   
+      // Update the local state with the latest provider data
       setCurrentProvider(updatedProvider);
       alert('Slot confirmed!');
     } catch (error) {
@@ -112,53 +135,72 @@ function ProviderDashboard() {
   
   const handleRejectSlot = async (booking) => {
     try {
-      // Update the provider's booking status to "Rejected"
+      // Update provider's booking details
       const updatedProviderBookings = currentProvider.bookingDetails.map((b) =>
-        b.seekerName === booking.seekerName &&
-        b.date === booking.date &&
-        b.time === booking.time
+        b.bookingId === booking.bookingId // Use bookingId to identify the booking
           ? { ...b, status: 'Rejected' }
           : b
       );
   
-      // Update the provider's data
       const updatedProvider = { ...currentProvider, bookingDetails: updatedProviderBookings };
-      await fetch(`http://localhost:3000/provider/${currentProvider.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedProvider),
-      });
   
-      // Update the seeker's booking status to "Rejected"
-      const seekerRes = await fetch(`http://localhost:3000/seeker?username=${booking.seekerName}`);
+      // Update provider's booking details in the backend
+      await fetch(
+        `http://localhost:4000/serviceprovider-api/serviceproviders/${currentProvider.username}/booking-update`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          },
+          body: JSON.stringify(updatedProvider),
+        }
+      );
+  
+      // Fetch seeker data
+      const seekerRes = await fetch(
+        `http://localhost:4000/customer-api/customers/${booking.seekerName}`,
+        {
+          headers: {
+            Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          },
+        }
+      );
       if (!seekerRes.ok) throw new Error('Failed to fetch seeker data');
   
-      const seekers = await seekerRes.json();
-      if (seekers.length > 0) {
-        const seeker = seekers[0]; // Assuming there's only one seeker with that name
+      const seekersData = await seekerRes.json();
+      const seeker = seekersData.payload; // Assuming the API returns a single seeker object
+  
+      if (seeker && seeker.bookingDetails) {
+        // Update seeker's booking details
         const updatedSeekerBookings = seeker.bookingDetails.map((b) =>
-          b.seekerName === booking.seekerName &&
-          b.providerName === booking.providerName &&
-          b.date === booking.date &&
-          b.time === booking.time
+          b.bookingId === booking.bookingId // Use bookingId to identify the booking
             ? { ...b, status: 'Rejected' }
             : b
         );
   
-        // Update the seeker's data
-        await fetch(`http://localhost:3000/seeker/${seeker.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...seeker, bookingDetails: updatedSeekerBookings }),
-        });
+        // Update seeker's booking details in the backend
+        await fetch(
+          `http://localhost:4000/customer-api/customers/${seeker.username}/booking-update`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+            },
+            body: JSON.stringify({ ...seeker, bookingDetails: updatedSeekerBookings }),
+          }
+        );
       }
   
+      // Update the local state with the latest provider data
       setCurrentProvider(updatedProvider);
       alert('Slot rejected!');
     } catch (error) {
       alert(error.message);
     }
   };
+  
 
   return (
     <div className="provider-dashboard">
@@ -227,6 +269,7 @@ function ProviderDashboard() {
               <p><strong>Seeker Name:</strong> {booking.seekerName}</p>
               <p><strong>Date:</strong> {booking.date}</p>
               <p><strong>Time:</strong> {booking.time}</p>
+              <p><strong>Address:</strong> {booking.homeAddress}</p>
               <p><strong>Status:</strong> {booking.status || 'Pending'}</p>
               <div className="booking-actions">
                 <button

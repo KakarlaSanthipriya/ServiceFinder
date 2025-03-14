@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useLocation } from 'react-router-dom';
+import { v4 as uuidv4 } from 'uuid'; // Import uuid for generating unique IDs
 import './Booking.css';
 import { CiLocationOn } from "react-icons/ci";
 import { CgMail } from "react-icons/cg";
@@ -110,12 +111,17 @@ const Booking = () => {
       setShowModal(true);
     }
 
+    // Generate a unique ID for the booking
+    const bookingId = uuidv4();
+
     const bookingDetails = {
+      bookingId, // Add the unique ID to the booking
       seekerName: currentUser.username,
       providerName: provider.username,
       date: selectedDate.toDateString(),
       time: selectedTime,
       homeAddress: homeAddress,
+      status: 'Pending', // Default status
     };
 
     try {

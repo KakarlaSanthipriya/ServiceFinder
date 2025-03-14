@@ -1,4 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react';
+import { v4 as uuidv4 } from 'uuid'; // Import uuid for generating unique IDs
 import { seekerLoginContext } from '../../contexts/seekerLoginContext';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css'; // Default calendar styles
@@ -58,38 +59,38 @@ function SeekerProfile() {
       alert(error.message);
     }
   };
+
   const handleEditBooking = async (booking) => {
     setEditingBooking(booking);
     setSelectedDate(new Date(booking.date));
     setSelectedTime(booking.time);
     setNewHomeAddress(booking.homeAddress);
-  
+
     try {
       const providerRes = await fetch(
         `http://localhost:4000/serviceprovider-api/serviceproviders/${booking.providerName}`,
         {
           headers: {
-            "Authorization": `Bearer ${sessionStorage.getItem('token')}`, // Add the token
+            "Authorization": `Bearer ${sessionStorage.getItem('token')}`,
           },
         }
       );
-  
+
       if (!providerRes.ok) throw new Error("Failed to fetch provider details");
-  
+
       const provData = await providerRes.json();
       console.log("Provider Data:", provData); // Log the response to debug
-  
+
       // Handle unauthorized access
       if (provData.message === 'Unauthorised access') {
         alert("You are not authorized to access this resource. Please log in again.");
-        // Redirect to login page or handle unauthorized access
         return;
       }
-  
+
       // Check if provData.payload exists and is an object
       if (provData.payload && typeof provData.payload === 'object' && !Array.isArray(provData.payload)) {
         const provider = provData.payload; // payload is an object, not an array
-  
+
         if (provider.openingTime && provider.closingTime) {
           generateTimeSlots(provider.openingTime, provider.closingTime);
         } else {
@@ -104,6 +105,7 @@ function SeekerProfile() {
       setAvailableTimes([]);
     }
   };
+
   const generateTimeSlots = (start, end) => {
     let slots = [];
     let startTime = parseTime(start);
@@ -151,22 +153,18 @@ function SeekerProfile() {
       alert("Please select a time slot and provide your address.");
       return;
     }
-  
+
     // Update the booking details in the local state
     const updatedBookingDetails = bookingDetails.map((booking) =>
-      booking.seekerName === editingBooking.seekerName &&
-      booking.providerName === editingBooking.providerName &&
-      booking.date === editingBooking.date &&
-      booking.time === editingBooking.time &&
-      booking.homeAddress === editingBooking.homeAddress
+      booking.bookingId === editingBooking.bookingId // Use bookingId to identify the booking
         ? { ...booking, date: selectedDate.toDateString(), time: selectedTime, homeAddress: newHomeAddress }
         : booking
     );
-  
+
     setBookingDetails(updatedBookingDetails);
-  
+
     const updatedSeeker = { ...currentUser, bookingDetails: updatedBookingDetails };
-  
+
     try {
       // Update seeker's booking details in the backend
       const seekerRes = await fetch(
@@ -180,17 +178,36 @@ function SeekerProfile() {
           body: JSON.stringify({ bookingDetails: updatedBookingDetails }),
         }
       );
-  
+
       const seekerData = await seekerRes.json();
       console.log("Seeker Update Response:", seekerData);
-  
+
       if (!seekerRes.ok) {
         throw new Error(seekerData.message || "Failed to update seeker booking details");
       }
-  
+
       // Update provider's booking details in the backend
       await updateProviderBookingDetails(updatedSeeker, editingBooking);
-  
+
+      // Fetch the updated seeker profile from the backend
+      const updatedSeekerRes = await fetch(
+        `http://localhost:4000/customer-api/customers/${currentUser.username}`,
+        {
+          headers: {
+            Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          },
+        }
+      );
+
+      const updatedSeekerData = await updatedSeekerRes.json();
+      if (!updatedSeekerRes.ok) {
+        throw new Error(updatedSeekerData.message || "Failed to fetch updated seeker profile");
+      }
+
+      // Update the local state with the latest data
+      setCurrentUser(updatedSeekerData.payload);
+      setBookingDetails(updatedSeekerData.payload.bookingDetails || []);
+
       alert('Booking details updated!');
       setEditingBooking(null);
       setShowModal(true);
@@ -201,7 +218,9 @@ function SeekerProfile() {
   };
 
   const updateProviderBookingDetails = async (updatedSeeker, updatedBooking) => {
-    const { seekerName, providerName, date, time, homeAddress } = updatedBooking;
+    const { providerName, bookingId } = updatedBooking;
+  
+    console.log("Printing updated booking", updatedBooking);
   
     try {
       // Fetch the provider's current booking details
@@ -217,19 +236,21 @@ function SeekerProfile() {
       const providerData = await providerRes.json();
       const provider = providerData.payload;
   
+      console.log("Provider name", provider);
+  
       if (!providerRes.ok) {
         throw new Error(providerData.message || "Failed to fetch provider details");
       }
   
+      // Filter out null or undefined values from bookingDetails
+      const validBookings = provider.bookingDetails.filter(
+        (booking) => booking !== null && booking !== undefined
+      );
+  
       // Update the provider's booking details
-      const updatedBookings = provider.bookingDetails.map((providerBooking) => {
-        if (
-          providerBooking.seekerName === seekerName &&
-          providerBooking.providerName === providerName &&
-          providerBooking.date === date &&
-          providerBooking.time === time &&
-          providerBooking.homeAddress === homeAddress
-        ) {
+      const updatedBookings = validBookings.map((providerBooking) => {
+        // Check if the current booking matches the one being edited
+        if (providerBooking.bookingId === bookingId) {
           // Update the booking with new date, time, and home address
           return {
             ...providerBooking,
@@ -238,8 +259,11 @@ function SeekerProfile() {
             homeAddress: newHomeAddress,
           };
         }
+        // Return the booking as-is if it doesn't match
         return providerBooking;
       });
+  
+      console.log("Updated Provider Bookings:", updatedBookings); // Debugging
   
       // Save the updated provider's booking details
       const updateRes = await fetch(
@@ -265,10 +289,10 @@ function SeekerProfile() {
       throw error;
     }
   };
+
   const cancelEdit = () => {
     setEditingBooking(null);
   };
-  
 
   return (
     <div className='seeker-profile-page'>
@@ -276,37 +300,36 @@ function SeekerProfile() {
         <h2 className='profile-title'>My Profile</h2>
         <form onSubmit={handleSubmit(handleProfileUpdate)}>
           <label className='prof-label'>Username:</label>
-          <input 
-            className='prof-input' 
-            type="text" 
-            {...register("username")} 
-            
+          <input
+            className='prof-input'
+            type="text"
+            {...register("username")}
           />
 
           <label className='prof-label'>Email:</label>
-          <input 
-            className='prof-input' 
-            type="email" 
+          <input
+            className='prof-input'
+            type="email"
             {...register("email", {
               required: "Email is required",
               pattern: {
                 value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
-                message: "Invalid email format"
-              }
+                message: "Invalid email format",
+              },
             })}
           />
           {errors.email && <p className="error-message">{errors.email.message}</p>}
 
           <label className='prof-label'>Phone Number:</label>
-          <input 
-            className='prof-input' 
-            type="text" 
+          <input
+            className='prof-input'
+            type="text"
             {...register("mobile", {
               required: "Phone number is required",
               pattern: {
                 value: /^[0-9]{10}$/,
-                message: "Phone number must be exactly 10 digits"
-              }
+                message: "Phone number must be exactly 10 digits",
+              },
             })}
           />
           {errors.mobile && <p className="error-message">{errors.mobile.message}</p>}
@@ -317,21 +340,29 @@ function SeekerProfile() {
 
         <h3 className='profile-booking-details'>Your Booking Details</h3>
         <ul className='profile-ul'>
-          {bookingDetails.length > 0 ? (
-            bookingDetails.map((booking, index) => (
-              <li key={index}>
-                <span className='provider-name'>{booking.providerName}</span>
-                <span className='slot-date'>{booking.date}</span>
-                <span className='slot-time'>{booking.time}</span>
-                <span className='slot-address'>{booking.homeAddress}</span>
-                <span className='slot-status'> Status: {booking.status || 'Pending'}</span>
-                <button onClick={() => handleEditBooking(booking)} className='profile-update-button'>Edit</button>
-              </li>
-            ))
-          ) : (
-            <li>No bookings available</li>
-          )}
-        </ul>
+  {bookingDetails.length > 0 ? (
+    bookingDetails.map((booking, index) => (
+      <li key={index}>
+        <span className='provider-name'>{booking.providerName}</span>
+        <span className='slot-date'>{booking.date}</span>
+        <span className='slot-time'>{booking.time}</span>
+        <span className='slot-address'>{booking.homeAddress}</span>
+        <span className='slot-status'> Status: {booking.status || 'Pending'}</span>
+        {/* Conditionally render the Edit button */}
+        {booking.status === 'Pending' && (
+          <button
+            onClick={() => handleEditBooking(booking)}
+            className='profile-update-button'
+          >
+            Edit
+          </button>
+        )}
+      </li>
+    ))
+  ) : (
+    <li>No bookings available</li>
+  )}
+</ul>
 
         {editingBooking && (
           <div className="edit-booking-modal">
@@ -355,7 +386,8 @@ function SeekerProfile() {
             </div>
             <div className="home-address-section">
               <label htmlFor="home-address" className='prof-label'>Your Home Address</label>
-              <input className='prof-input'
+              <input
+                className='prof-input'
                 id="home-address"
                 type="text"
                 value={newHomeAddress}

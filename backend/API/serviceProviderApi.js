@@ -171,16 +171,21 @@ serviceproviderApp.put('/serviceproviders/:username/booking', tokenVerify, expre
     res.send({ message: "Booking details added", payload: provider.bookingDetails });
   }));
 
+
 //Update user profile (protected)
-serviceproviderApp.put("/serviceproviders/:username", tokenVerify, expressAsyncHandler(async(req, res)=>{
+
+serviceproviderApp.put("/serviceproviders/:_id/profile-update", tokenVerify, expressAsyncHandler(async(req, res)=>{
 
     const serviceProviderCollection = req.app.get('serviceProviderCollection')
     const modifiedProvider = req.body;
+    const userId = req.params._id
 
-    const usernameOfUrl = req.params.username;
-
+    // Ensure _id is not included in the update
+  if (modifiedProvider._id) {
+    delete modifiedProvider._id; // Remove _id from the update object
+  }
     const result = await serviceProviderCollection.updateOne(
-        {username: usernameOfUrl},
+        {_id: new ObjectId(userId)},
         {$set: modifiedProvider}
     );
 
@@ -191,32 +196,33 @@ const { ObjectId } = require('mongodb'); // Ensure ObjectId is imported
 
 // Update provider's booking details by username (protected)
 serviceproviderApp.put("/serviceproviders/:username/booking-update", tokenVerify, expressAsyncHandler(async (req, res) => {
-    const serviceProviderCollection = req.app.get('serviceProviderCollection');
-    const { bookingDetails } = req.body; // Get the updated booking details from the request body
-    const username = req.params.username; // Get the username from the URL
-  
-    // Validate the input
-    if (!Array.isArray(bookingDetails)) {
-      return res.status(400).send({ message: "Invalid booking details format" });
-    }
-  
-    // Update the provider's booking details in the database
-    const result = await serviceProviderCollection.updateOne(
-      { username }, // Find the provider by username
-      { $set: { bookingDetails } } // Update the bookingDetails field
-    );
-  
-    // Check if the update was successful
-    if (result.matchedCount === 0) {
-      return res.status(404).send({ message: "Provider not found" });
-    }
-  
-    if (result.modifiedCount === 1) {
-      res.send({ message: "Provider booking details updated successfully", payload: bookingDetails });
-    } else {
-      res.send({ message: "No changes made to booking details" });
-    }
-  }));
+  const serviceProviderCollection = req.app.get('serviceProviderCollection');
+  const { bookingDetails } = req.body; // Get the updated booking details from the request body
+  const username = req.params.username; // Get the username from the URL
+
+  // Validate the input
+  if (!Array.isArray(bookingDetails)) {
+    return res.status(400).send({ message: "Invalid booking details format" });
+  }
+
+  // Find the provider by username
+  const provider = await serviceProviderCollection.findOne({ username });
+  if (!provider) {
+    return res.status(404).send({ message: "Provider not found" });
+  }
+
+  // Update the provider's booking details
+  provider.bookingDetails = bookingDetails;
+
+  // Save the updated provider document
+  await serviceProviderCollection.updateOne(
+    { username },
+    { $set: { bookingDetails: provider.bookingDetails } }
+  );
+  console.log("booking details of provider", bookingDetails)
+
+  res.send({ message: "Provider booking details updated successfully", payload: provider.bookingDetails });
+}));
 
 
 
