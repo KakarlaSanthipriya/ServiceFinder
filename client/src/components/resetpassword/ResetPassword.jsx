@@ -13,24 +13,30 @@ function ResetPassword() {
         setMessage("");
 
         try {
-            const seekerResponse = await fetch("http://localhost:3000/seeker");
-            const providerResponse = await fetch("http://localhost:3000/provider");
+            const seekerResponse = await fetch("http://localhost:4000/customer-api/customers");
+            const providerResponse = await fetch("http://localhost:4000/serviceprovider-api/serviceproviders");
 
-            const seekers = await seekerResponse.json();
-            const providers = await providerResponse.json();
+            const seekersData = await seekerResponse.json();
+            const seekers = await seekersData.payload
+
+            const providersData = await providerResponse.json();
+            const providers = await providersData.payload
 
             const seeker = seekers.find(user => user.email === email);
             const provider = providers.find(user => user.email === email);
 
             let user = seeker || provider;
-            let userType = seeker ? "seeker" : "provider";
+            let userType = seeker ? "customer" : "provider";
+            let userApi = seeker? "customer": "serviceprovider";
 
             if (user) {
-                await fetch(`http://localhost:3000/${userType}/${user.id}`, {
+                if(userType=='seeker'){
+                await fetch(`http://localhost:4000/${userApi}-api/${userType}/${user._id}`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ ...user, password: newPassword })
                 });
+            }
 
                 setMessage("Password reset successfully!");
                 

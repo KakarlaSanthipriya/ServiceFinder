@@ -33,7 +33,7 @@ function SignUpSeeker() {
 
 
   return (
-    <div className='register '>
+    <div className='register-seeker '>
       <div className='grid-Items'>
         <div className="grid-itemA">
           

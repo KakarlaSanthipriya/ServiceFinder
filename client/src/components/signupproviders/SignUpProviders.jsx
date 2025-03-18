@@ -379,7 +379,7 @@ const SignUpProviders = () => {
             {/* Login Link */}
             <p className="loginpage text-center mt-3">
               Already had an account?{' '}
-              <Link to="/providerlogin" className="text-primary">
+              <Link to="/seekerlogin" className="text-primary">
                 Login
               </Link>{' '}
               to your account

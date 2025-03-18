@@ -162,6 +162,37 @@ customerApp.put("/customers/:username/booking-update", tokenVerify, expressAsync
   res.send({ message: "Seeker booking details updated successfully", payload: seeker.bookingDetails });
 }));
 
+
+// Endpoint to reset password for a customer
+customerApp.put('/customer/:_id', expressAsyncHandler(async (req, res) => {
+  const customerCollection = req.app.get('customerCollection');
+  const { _id } = req.params; 
+  const { newPassword } = req.body; 
+
+  try {
+      
+      const customer = await customerCollection.findOne({ _id: ObjectId(_id) });
+      if (!customer) {
+          return res.status(404).send({ message: "User not found" });
+      }
+
+      
+      const hashedNewPassword = await bcryptjs.hash(newPassword, 7);
+
+      
+      await customerCollection.updateOne(
+          { _id: ObjectId(_id) },
+          { $set: { password: hashedNewPassword } }
+      );
+
+      res.send({ message: "Password reset successfully" });
+
+  } catch (err) {
+      console.error("Error resetting password:", err);
+      res.status(500).send({ message: "Internal Server Error" });
+  }
+}));
+
 module.exports = customerApp;
 
 

@@ -224,6 +224,36 @@ serviceproviderApp.put("/serviceproviders/:username/booking-update", tokenVerify
   res.send({ message: "Provider booking details updated successfully", payload: provider.bookingDetails });
 }));
 
+// Endpoint to reset password for a service provider
+serviceproviderApp.put('/serviceprovider/:_id', expressAsyncHandler(async (req, res) => {
+  const serviceProviderCollection = req.app.get('serviceProviderCollection');
+  const { _id } = req.params; 
+  const { newPassword } = req.body; 
+
+  try {
+      
+      const provider = await serviceProviderCollection.findOne({ _id: ObjectId(_id) });
+      if (!provider) {
+          return res.status(404).send({ message: "User not found" });
+      }
+
+      
+      const hashedNewPassword = await bcryptjs.hash(newPassword, 7);
+
+      
+      await serviceProviderCollection.updateOne(
+          { _id: ObjectId(_id) },
+          { $set: { password: hashedNewPassword } }
+      );
+
+      res.send({ message: "Password reset successfully" });
+
+  } catch (err) {
+      console.error("Error resetting password:", err);
+      res.status(500).send({ message: "Internal Server Error" });
+  }
+}));
+
 
 
 

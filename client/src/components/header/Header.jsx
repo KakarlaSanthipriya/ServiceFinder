@@ -21,7 +21,6 @@ function Header() {
   const currentEndUser = (currentUser ===null)? currentProvider : currentUser;
   const logoutEndUser = currentEndUser === currentUser ? logoutUser : logoutProvider;
   const endUserLoginStatus = currentEndUser === currentUser ? userLoginStatus : providerLoginStatus;
-  
   // Toggle main menu
   const handleMenuToggle = () => setMenuOpen((prev) => !prev);
 
@@ -110,13 +109,9 @@ function Header() {
 
       <div className="nav_btns">
         <div className="signup-dropdown">
-        {!endUserLoginStatus && (
-          <div className="signup-dropdown">
-            <button className="sign_up btn">
-              <Link to="/signupseeker" className="dropdown-link">Sign-up</Link>
-            </button>
-          </div>
-        )}
+          <button className="sign_up btn" onClick={toggleSignupDropdown}>
+            Sign-up
+          </button>
           {signupDropdown && (
             <ul className="dropdown-menu">
               <li><Link to="/signupseeker" className="dropdown-link">Customer Sign-up</Link></li>
@@ -140,9 +135,8 @@ function Header() {
         ) : (
           <div className="user-dropdown">
             <button className="user-btn btn" onClick={toggleUserDropdown}>
-  {currentEndUser.username} <IoMdArrowDropdown />
-</button>
-
+              {currentEndUser.username} <IoMdArrowDropdown />
+            </button>
             
             {userDropdown && (
               <ul className="dropdown-menu-user">

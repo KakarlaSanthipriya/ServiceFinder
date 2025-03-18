@@ -17,6 +17,7 @@ import Booking from './components/booking/Booking';
 import SeekerProfile from './components/seekerprof/SeekerProfile';
 import ProviderDashboard from './components/providerdashboard/ProviderDashboard';
 import ResetPassword from './components/resetpassword/ResetPassword';
+import AboutUs from './components/aboutus/AboutUs';
 
 function App() {
   const browserRouter =createBrowserRouter([
@@ -84,6 +85,10 @@ function App() {
          {
           path:'/reset-password',
           element:<ResetPassword />
+         },
+         {
+          path:'/about',
+          element:<AboutUs />
          }
 
       ]
