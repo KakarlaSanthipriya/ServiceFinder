@@ -189,8 +189,8 @@ const SignUpProviders = () => {
 
             {/* Service Type */}
             <div className="mb-3">
-              <label className="form-label">
-                <strong>Select Service Type *</strong>
+              <label className="form-label ms-5 ps-5">
+                <strong>Select Service Type <span className='text-danger'>*</span></strong>
               </label>
               <select
                 className="form-select"
@@ -304,7 +304,7 @@ const SignUpProviders = () => {
 
             {/* Years of Experience */}
             <div className="mb-2">
-              <h6>Years of experience <span className="text-danger">*</span></h6>
+              <h6 className='ms-5 ps-5'>Years of experience <span className="text-danger">*</span></h6>
               <input
                 type="number"
                 className="form-control"
@@ -316,7 +316,7 @@ const SignUpProviders = () => {
 
             {/* Service Timings */}
             <div className="mb-3">
-              <label className="form-label"><strong>Service Timings (AM/PM) <span className="text-danger">*</span></strong></label>
+              <label className="form-label ms-5 ps-5"><strong>Service Timings (AM/PM) <span className="text-danger">*</span></strong></label>
               <div className="d-flex">
                 <input
                   type="text"

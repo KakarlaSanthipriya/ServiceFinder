@@ -27,16 +27,37 @@ function SeekerProfile() {
 
   useEffect(() => {
     if (currentUser) {
-      setValue("username", currentUser.username);
-      setValue("email", currentUser.email);
-      setValue("mobile", currentUser.mobile);
-      setBookingDetails(currentUser.bookingDetails || []);
+      setValue('username', currentUser.username || '');
+      setValue('email', currentUser.email || '');
+      setValue('mobile', currentUser.mobile || '');
     }
   }, [currentUser, setValue]);
 
-  if (!currentUser) {
-    return <div>Loading...</div>;
-  }
+  useEffect(() => {
+    const fetchBookingDetails = async () => {
+      if (currentUser) {
+        try {
+          const response = await fetch(
+            `http://localhost:4000/customer-api/customers/${currentUser.username}`,
+            {
+              headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` },
+            }
+          );
+
+          if (!response.ok) throw new Error('Failed to fetch booking details');
+
+          const data = await response.json();
+          setBookingDetails(data.payload.bookingDetails || []);
+        } catch (error) {
+          console.error('Error fetching booking details:', error);
+        }
+      }
+    };
+
+    fetchBookingDetails();
+  }, [currentUser]);
+
+  
 
   const handleProfileUpdate = async (data) => {
     try {
@@ -153,69 +174,47 @@ function SeekerProfile() {
       alert("Please select a time slot and provide your address.");
       return;
     }
-
-    // Update the booking details in the local state
+  
+    // Update the booking details in the local state immediately
     const updatedBookingDetails = bookingDetails.map((booking) =>
-      booking.bookingId === editingBooking.bookingId // Use bookingId to identify the booking
+      booking.bookingId === editingBooking.bookingId
         ? { ...booking, date: selectedDate.toDateString(), time: selectedTime, homeAddress: newHomeAddress }
         : booking
     );
-
+  
+    // Optimistically update state before API call
     setBookingDetails(updatedBookingDetails);
-
-    const updatedSeeker = { ...currentUser, bookingDetails: updatedBookingDetails };
-
+    setCurrentUser({ ...currentUser, bookingDetails: updatedBookingDetails });
+  
     try {
-      // Update seeker's booking details in the backend
+      // Update seeker in backend
       const seekerRes = await fetch(
         `http://localhost:4000/customer-api/customers/${currentUser.username}/booking-update`,
         {
-          method: 'PUT',
+          method: "PUT",
           headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${sessionStorage.getItem("token")}`,
           },
           body: JSON.stringify({ bookingDetails: updatedBookingDetails }),
         }
       );
-
+  
       const seekerData = await seekerRes.json();
-      console.log("Seeker Update Response:", seekerData);
-
-      if (!seekerRes.ok) {
-        throw new Error(seekerData.message || "Failed to update seeker booking details");
-      }
-
-      // Update provider's booking details in the backend
-      await updateProviderBookingDetails(updatedSeeker, editingBooking);
-
-      // Fetch the updated seeker profile from the backend
-      const updatedSeekerRes = await fetch(
-        `http://localhost:4000/customer-api/customers/${currentUser.username}`,
-        {
-          headers: {
-            Authorization: `Bearer ${sessionStorage.getItem('token')}`,
-          },
-        }
-      );
-
-      const updatedSeekerData = await updatedSeekerRes.json();
-      if (!updatedSeekerRes.ok) {
-        throw new Error(updatedSeekerData.message || "Failed to fetch updated seeker profile");
-      }
-
-      // Update the local state with the latest data
-      setCurrentUser(updatedSeekerData.payload);
-      setBookingDetails(updatedSeekerData.payload.bookingDetails || []);
-
-      alert('Booking details updated!');
+      if (!seekerRes.ok) throw new Error(seekerData.message || "Failed to update booking");
+  
+      // Update provider's booking details in backend
+      await updateProviderBookingDetails(currentUser, editingBooking);
+  
+      alert("Booking details updated!");
       setEditingBooking(null);
       setShowModal(true);
     } catch (error) {
-      console.error("Error updating booking details:", error);
+      console.error("Error updating booking:", error);
       alert(error.message);
     }
   };
+  
 
   const updateProviderBookingDetails = async (updatedSeeker, updatedBooking) => {
     const { providerName, bookingId } = updatedBooking;

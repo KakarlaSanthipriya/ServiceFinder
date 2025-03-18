@@ -187,7 +187,7 @@ const Booking = () => {
           <p className='provider-name-booking'><IoPerson className='me-2' />{provider.username}</p>
           <p className='provider-phone-booking'><FaPhone className='me-2' />{provider.phoneNumber}</p>
           <p className='provider-available-booking'><IoMdTime className='fs-4' /> Available {provider.openingTime} to {provider.closingTime}</p>
-          <button className="btn-appointment" onClick={() => setShowSidebar(true)}>Book Appointment</button>
+          <button className="btn-appointment" onClick={() => setShowSidebar(true)}>Book Service</button>
         </div>
 
         {showSidebar && (

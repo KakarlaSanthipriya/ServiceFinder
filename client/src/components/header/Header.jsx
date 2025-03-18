@@ -10,7 +10,6 @@ function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [categoriesDropdown, setCategoriesDropdown] = useState(false);
   const [signupDropdown, setSignupDropdown] = useState(false);
-  const [signinDropdown, setSigninDropdown] = useState(false);
   const [userDropdown, setUserDropdown] = useState(false);
 
   const { currentUser, logoutUser, userLoginStatus } = useContext(seekerLoginContext);
@@ -18,9 +17,10 @@ function Header() {
 
   let navigate = useNavigate();
 
-  const currentEndUser = (currentUser ===null)? currentProvider : currentUser;
+  const currentEndUser = currentUser === null ? currentProvider : currentUser;
   const logoutEndUser = currentEndUser === currentUser ? logoutUser : logoutProvider;
   const endUserLoginStatus = currentEndUser === currentUser ? userLoginStatus : providerLoginStatus;
+
   // Toggle main menu
   const handleMenuToggle = () => setMenuOpen((prev) => !prev);
 
@@ -35,23 +35,16 @@ function Header() {
     setSignupDropdown((prev) => !prev);
   };
 
-  // const toggleSigninDropdown = (event) => {
-  //   event.stopPropagation();
-  //   setSigninDropdown((prev) => !prev);
-  // };
-
   const toggleUserDropdown = (event) => {
     event.stopPropagation();
     setUserDropdown((prev) => !prev);
   };
-
 
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleOutsideClick = (event) => {
       if (!event.target.closest(".categories-dropdown")) setCategoriesDropdown(false);
       if (!event.target.closest(".signup-dropdown")) setSignupDropdown(false);
-      if (!event.target.closest(".signin-dropdown")) setSigninDropdown(false);
       if (!event.target.closest(".user-dropdown")) setUserDropdown(false);
     };
 
@@ -61,7 +54,7 @@ function Header() {
 
   const handleLogout = () => {
     logoutEndUser();
-    
+    navigate("/");
   };
 
   return (
@@ -86,17 +79,16 @@ function Header() {
             Categories
           </button>
           {categoriesDropdown && (
-          <div className="cat-dropdown">
-            <ul className="dropdown-menu">
-
-              <li><Link to="/services/Plumbing" className="dropdown-link">Plumbing</Link></li>
-              <li><Link to="/services/Electrical" className="dropdown-link">Electrical</Link></li>
-              <li><Link to="/services/Cleaning" className="dropdown-link">Cleaning</Link></li>
-              <li><Link to="/services/Painting" className="dropdown-link">Painting</Link></li>
-              <li><Link to="/services/Repair" className="dropdown-link">Repair</Link></li>
-              <li><Link to="/services/Shifting" className="dropdown-link">Shifting</Link></li>
-            </ul>
-          </div>
+            <div className="cat-dropdown">
+              <ul className="dropdown-menu">
+                <li><Link to="/services/Plumbing" className="dropdown-link">Plumbing</Link></li>
+                <li><Link to="/services/Electrical" className="dropdown-link">Electrical</Link></li>
+                <li><Link to="/services/Cleaning" className="dropdown-link">Cleaning</Link></li>
+                <li><Link to="/services/Painting" className="dropdown-link">Painting</Link></li>
+                <li><Link to="/services/Repair" className="dropdown-link">Repair</Link></li>
+                <li><Link to="/services/Shifting" className="dropdown-link">Shifting</Link></li>
+              </ul>
+            </div>
           )}
         </li>
         <li className="nav-item">
@@ -108,50 +100,47 @@ function Header() {
       </ul>
 
       <div className="nav_btns">
-        <div className="signup-dropdown">
-          <button className="sign_up btn" onClick={toggleSignupDropdown}>
-            Sign-up
-          </button>
-          {signupDropdown && (
-            <ul className="dropdown-menu">
-              <li><Link to="/signupseeker" className="dropdown-link">Customer Sign-up</Link></li>
-              <li><Link to="/signupproviders" className="dropdown-link">Service Provider Sign-up</Link></li>
-            </ul>
-          )}
-        </div>
-
-        {endUserLoginStatus === false ? (
-          <div className="signin-dropdown">
-            <Link to='/seekerlogin' ><button className="sign_in btn text-dark" >
-              Sign-in
-            </button></Link>
-            {/* {signinDropdown && (
+        {/* Conditionally render Sign-up dropdown only if user is not logged in */}
+        {!endUserLoginStatus && (
+          <div className="signup-dropdown">
+            <button className="sign_up btn" onClick={toggleSignupDropdown}>
+              Sign-up
+            </button>
+            {signupDropdown && (
               <ul className="dropdown-menu">
-                <li><Link to="/seekerlogin" className="dropdown-link">Customer Sign-in</Link></li>
-                <li><Link to="/providerlogin" className="dropdown-link">Service Provider Sign-in</Link></li>
+                <li><Link to="/signupseeker" className="dropdown-link">Customer Sign-up</Link></li>
+                <li><Link to="/signupproviders" className="dropdown-link">Service Provider Sign-up</Link></li>
               </ul>
-            )} */}
+            )}
+          </div>
+        )}
+
+        {/* Conditionally render Sign-in or User dropdown based on login status */}
+        {!endUserLoginStatus ? (
+          <div className="signin-dropdown">
+            <Link to="/seekerlogin">
+              <button className="sign_in btn text-dark">Sign-in</button>
+            </Link>
           </div>
         ) : (
           <div className="user-dropdown">
             <button className="user-btn btn" onClick={toggleUserDropdown}>
               {currentEndUser.username} <IoMdArrowDropdown />
             </button>
-            
             {userDropdown && (
               <ul className="dropdown-menu-user">
                 <li>
                   <button className="dropdown-link" onClick={handleLogout}>Logout</button>
                 </li>
                 {currentUser ? (
-          <Link to="/seeker-profile" className="text-decoration-none dropdown-link ms-5 mt-4 mb-4">
-            Profile
-          </Link>
-        ) : (
-          <Link to="/provider-dashboard" className="text-decoration-none dropdown-link ms-5 mt-4 mb-4">
-            Dashboard
-          </Link>
-        )}
+                  <Link to="/seeker-profile" className="text-decoration-none dropdown-link ms-5 mt-4 mb-4">
+                    Profile
+                  </Link>
+                ) : (
+                  <Link to="/provider-dashboard" className="text-decoration-none dropdown-link ms-5 mt-4 mb-4">
+                    Dashboard
+                  </Link>
+                )}
               </ul>
             )}
           </div>
