@@ -557,7 +557,8 @@ const Plumbing = () => {
                   <p className="provider-service">{provider.serviceType}</p>
                   <h3 className="provider-business">{businessType.trim()}</h3>
                   <p className="provider-name w-50">{provider.username}</p>
-                  <p className="provider-address">{provider.businessAddress}</p>
+                  <p className="provider-address">{provider.businessAddress}, {provider.city}</p>
+                  
                   <p className="provider-experience">
                     <strong>Experience:</strong> {provider.yearsOfExperience} years
                   </p>

@@ -38,6 +38,7 @@ const Booking = () => {
       const Prodata = await res.json();
       const data = Prodata.payload || [];
       setRelatedBusinesses(data);
+      console.log("data", data)
       console.log("Related businesses:", data);
     } catch (error) {
       console.error("Error fetching related businesses:", error.message);
@@ -242,7 +243,7 @@ const Booking = () => {
                 <button type="button" className="btn-close fs-6 mt-3 me-3" onClick={handleCloseModal}></button>
               </div>
               <div className="modal-body">
-                <p className='text-success text-center'>Slot Booking Successful!</p>
+                <p className='text-success text-center'>Service booking Booking Successful!</p>
               </div>
             </div>
           </div>

@@ -214,10 +214,10 @@ const SignUpProviders = () => {
             {/* Pricing Fields (Conditional Rendering) */}
             {showPricing && (
               <div className="mb-3">
-                <h5>Set Pricing for Selected Service</h5>
+                <h5 className='ms-5 ps-5'>Set Pricing for Selected Service</h5>
                 {/* Low Complexity Pricing */}
                 <div className="mb-3">
-                  <label>Low Complexity Price Range (₹):</label>
+                  <label className='ps-5 ms-5'>Low Complexity Price Range (₹):</label>
                   <div className="d-flex gap-2">
                     <input
                       type="number"
@@ -238,7 +238,7 @@ const SignUpProviders = () => {
 
                 {/* Medium Complexity Pricing */}
                 <div className="mb-3">
-                  <label>Medium Complexity Price Range (₹):</label>
+                  <label className='ms-5 ps-5'>Medium Complexity Price Range (₹):</label>
                   <div className="d-flex gap-2">
                     <input
                       type="number"
@@ -259,7 +259,7 @@ const SignUpProviders = () => {
 
                 {/* High Complexity Pricing */}
                 <div className="mb-3">
-                  <label>High Complexity Price Range (₹):</label>
+                  <label className='ps-5 ms-5'>High Complexity Price Range (₹):</label>
                   <div className="d-flex gap-2">
                     <input
                       type="number"
@@ -282,7 +282,7 @@ const SignUpProviders = () => {
 
             {/* Business Type (Conditional Rendering) */}
             {showBusiness && (
-              <div className="mb-3">
+              <div className="mb-3 ms-5 ps-5">
                 <strong>Select Business Type *</strong>
                 {businessOptions.map((type, index) => (
                   <div key={index} className="form-check">
