@@ -23,7 +23,8 @@ Backend: Node.js, Express.js
 Database: MongoDB
 
 ## Clone the Repository
-```bash git clone https://github.com/KakarlaSanthipriya/ServiceFinder.git
+```bash
+git clone https://github.com/KakarlaSanthipriya/ServiceFinder.git
 
 
 
